@@ -28,7 +28,9 @@ def home():
 def predict():
     data = request.json
 
-    # Create input dataframe (ORDER MATTERS)
+    # ---------------------------
+    # Input dataframe (order matters)
+    # ---------------------------
     input_df = pd.DataFrame([{
         "A1": int(data["A1"]),
         "A2": int(data["A2"]),
@@ -44,52 +46,59 @@ def predict():
     }])
 
     # ---------------------------
-    # Model prediction
+    # Model probability
     # ---------------------------
     prob = model.predict_proba(input_df)[0][1]
 
-    prediction = (
-        "⚠️ ASD traits detected"
-        if prob > 0.5
-        else "✅ No ASD traits detected"
-    )
+    # ---------------------------
+    # Binary prediction
+    # ---------------------------
+    if prob >= 0.5:
+        prediction = "⚠️ ASD traits detected"
+    else:
+        prediction = "✅ No ASD traits detected"
 
     # ---------------------------
-    # Rule-based explanation (NO SHAP)
-    # IMPORTANT: 1 = abnormal, 0 = normal
+    # Severity level
+    # ---------------------------
+    if prob < 0.33:
+        severity = "Low / No ASD traits"
+    elif prob < 0.66:
+        severity = "Mild ASD traits"
+    elif prob < 0.85:
+        severity = "Moderate ASD traits"
+    else:
+        severity = "Severe ASD traits"
+
+    # ---------------------------
+    # Simple rule-based explanation
     # ---------------------------
     reasons = []
 
     if input_df["A1"].values[0] == 1:
         reasons.append("Does not respond to name (A1)")
-
     if input_df["A2"].values[0] == 1:
         reasons.append("Poor eye contact (A2)")
-
     if input_df["A3"].values[0] == 1:
         reasons.append("Does not point to objects (A3)")
-
     if input_df["A4"].values[0] == 1:
         reasons.append("No pretend or imaginative play (A4)")
-
     if input_df["A5"].values[0] == 1:
         reasons.append("Does not follow gaze (A5)")
-
     if input_df["A6"].values[0] == 1:
         reasons.append("Difficulty understanding speech (A6)")
-
     if input_df["A7"].values[0] == 1:
         reasons.append("Limited use of gestures (A7)")
-
     if input_df["Family_mem_with_ASD"].values[0] == 1:
         reasons.append("Family history of ASD")
 
     # ---------------------------
-    # Response
+    # JSON response
     # ---------------------------
     return jsonify({
         "prediction": prediction,
         "probability": round(float(prob), 3),
+        "severity": severity,
         "key_factors": reasons
     })
 
