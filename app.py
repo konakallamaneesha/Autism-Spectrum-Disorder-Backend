@@ -12,13 +12,14 @@ import time
 # ---------------------------
 # App setup
 # ---------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 CORS(app)
 
 # ---------------------------
 # Load trained model
 # ---------------------------
-model = joblib.load("model/rf_model.pkl")
+model = joblib.load(os.path.join(BASE_DIR, "model", "rf_model.pkl"))
 
 # ---------------------------
 # Home route
@@ -99,8 +100,8 @@ def predict():
 
             print("SHAP SHAPE:", shap_values.values.shape)
 
-            os.makedirs("static", exist_ok=True)
-            filename = f"static/shap_{int(time.time())}.png"
+            os.makedirs(app.static_folder, exist_ok=True)
+            filename = os.path.join(app.static_folder, f"shap_{int(time.time())}.png")
 
             plt.figure(figsize=(8, 5))
 
